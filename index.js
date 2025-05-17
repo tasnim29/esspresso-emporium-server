@@ -28,6 +28,7 @@ async function run() {
   try {
     await client.connect();
     const coffeeCollection = client.db("espresso").collection("coffee");
+    const userCollection = client.db("espresso").collection("users");
 
     // coffee post
     app.post("/coffees", async (req, res) => {
@@ -47,6 +48,37 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await coffeeCollection.findOne(query);
       res.send(result);
+    });
+
+    // coffee delete
+    app.delete("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //update coffee
+    app.put("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateCoffee = req.body;
+      const options = { upsert: true };
+      const update = { $set: updateCoffee };
+      const result = await coffeeCollection.updateOne(filter, update, options);
+      res.send(result);
+    });
+
+    // user post
+    app.post("/users", async (req, res) => {
+      const userInfo = req.body;
+      const result = await userCollection.insertOne(userInfo);
+      res.send(result);
+    });
+    // user get
+    app.get("/users", async (req, res) => {
+      const cursor = await userCollection.find().toArray();
+      res.send(cursor);
     });
 
     await client.db("admin").command({ ping: 1 });
