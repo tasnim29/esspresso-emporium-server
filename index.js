@@ -4,7 +4,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 const cors = require("cors");
 app.use(cors());
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 // console.log("DB_USER:", process.env.DB_USER);
 // console.log("DB_PASS:", process.env.DB_PASSWORD);
@@ -27,6 +27,27 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    const coffeeCollection = client.db("espresso").collection("coffee");
+
+    // coffee post
+    app.post("/coffees", async (req, res) => {
+      const newCoffee = req.body;
+      const result = await coffeeCollection.insertOne(newCoffee);
+      res.send(result);
+    });
+    // coffee get
+    app.get("/coffees", async (req, res) => {
+      const cursor = await coffeeCollection.find().toArray();
+      res.send(cursor);
+    });
+
+    // coffee individual get
+    app.get("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coffeeCollection.findOne(query);
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
